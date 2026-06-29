@@ -38,7 +38,8 @@ class HandTracker:
     def __init__(self):
         import mediapipe as mp
 
-        self.mp_hands = mp.solutions.hands
+        from mediapipe.python.solutions import hands as mp_hands
+        self.mp_hands = mp_hands
 
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
