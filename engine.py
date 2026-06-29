@@ -364,3 +364,64 @@ class HUD:
         )
 
         return frame
+    
+
+    # =========================
+# GLOBAL OBJECTS
+# =========================
+
+tracker = HandTracker()
+background = BackgroundModel()
+portal = PortalBox()
+hud = HUD()
+
+background_captured = False
+
+
+# =========================
+# PROCESS FRAME FOR GRADIO
+# =========================
+
+def process_frame(frame):
+
+    global background_captured
+
+    if frame is None:
+        return None
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+    h, w = frame.shape[:2]
+
+    # Capture background only once
+    if not background_captured:
+        background.update(frame)
+
+        if background.ready:
+            background_captured = True
+
+    # Detect hands
+    results = tracker.process(frame)
+    info = tracker.get_info(results, w, h)
+
+    # Update portal
+    portal.update(info)
+    portal.update_alpha()
+
+    # Render portal
+    frame = portal.render(
+        frame,
+        background.get(),
+        info
+    )
+
+    # Draw HUD
+    frame = hud.draw(
+        frame,
+        portal,
+        info
+    )
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    return frame
