@@ -1,19 +1,18 @@
 import cv2
-import numpy as np
 import time
 
 from engine import (
     BackgroundModel,
-    SegmentationEngine,
     HandTracker,
     PortalBox,
     HUD
 )
 
-WINDOW = "Cinematic Cloak"
+WINDOW = "Gesture Controlled Dynamic Invisibility Portal"
 
 
 def main():
+
     cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
@@ -21,32 +20,47 @@ def main():
         return
 
     ret, frame = cap.read()
+
     if not ret:
         print("Failed to read camera")
         return
 
     h, w = frame.shape[:2]
 
-    seg = SegmentationEngine()
     tracker = HandTracker()
-    bg = BackgroundModel(h, w)
+    bg = BackgroundModel()
     portal = PortalBox()
     hud = HUD()
 
     print("Stand still for background capture...")
 
-    # =========================
-    # BACKGROUND CALIBRATION
-    # =========================
+    # --------------------------
+    # Background Capture
+    # --------------------------
+
     start = time.time()
-    while time.time() - start < 3:
+
+    while time.time() - start < 5:
+
         ret, frame = cap.read()
+
         if not ret:
             continue
 
-        bg.update(frame.astype(np.float32))
+        bg.update(frame)
+
+        cv2.putText(
+            frame,
+            "Capturing Background...",
+            (20,40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (0,255,255),
+            2
+        )
 
         cv2.imshow(WINDOW, frame)
+
         if cv2.waitKey(1) & 0xFF == 27:
             cap.release()
             cv2.destroyAllWindows()
@@ -54,33 +68,46 @@ def main():
 
     print("Ready!")
 
-    # =========================
-    # MAIN LOOP
-    # =========================
+    # --------------------------
+    # Main Loop
+    # --------------------------
+
     while True:
+
         ret, frame = cap.read()
+
         if not ret:
             continue
 
-        frame = frame.astype(np.uint8)
-
-        mask = seg.get_mask(frame)
         results = tracker.process(frame)
+
         info = tracker.get_info(results, w, h)
 
         portal.update(info)
+
         portal.update_alpha()
 
-        frame = portal.render(frame, mask, bg.get(), info["points"])
-        frame = hud.draw(frame, portal, info)
+        frame = portal.render(
+            frame,
+            bg.get(),
+            info
+        )
+
+        frame = hud.draw(
+            frame,
+            portal,
+            info
+        )
 
         cv2.imshow(WINDOW, frame)
 
         key = cv2.waitKey(1) & 0xFF
-        if key in (27, ord('q')):
+
+        if key == 27 or key == ord("q"):
             break
 
     cap.release()
+
     cv2.destroyAllWindows()
 
 

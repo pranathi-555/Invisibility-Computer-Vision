@@ -6,16 +6,23 @@ import collections
 # BACKGROUND MODEL
 # =========================
 class BackgroundModel:
-    def __init__(self, h, w, n_frames=90):
+
+    def __init__(self, n_frames=90):
         self.buf = collections.deque(maxlen=n_frames)
         self.bg = None
         self.ready = False
 
     def update(self, frame):
+
         self.buf.append(frame.astype(np.float32))
 
-        if len(self.buf) > 20:
-            self.bg = np.mean(self.buf, axis=0).astype(np.float32)
+        if len(self.buf) >= self.buf.maxlen:
+
+            self.bg = np.mean(
+                np.array(self.buf),
+                axis=0
+            ).astype(np.float32)
+
             self.ready = True
 
     def get(self):
@@ -23,131 +30,250 @@ class BackgroundModel:
 
 
 # =========================
-# SEGMENTATION ENGINE
-# =========================
-class SegmentationEngine:
-    def __init__(self):
-        import mediapipe as mp
-        self.seg = mp.solutions.selfie_segmentation.SelfieSegmentation(1)
-        self.prev = None
-
-    def get_mask(self, frame):
-        h, w = frame.shape[:2]
-
-        small = cv2.resize(frame, (320, 180))
-        res = self.seg.process(cv2.cvtColor(small, cv2.COLOR_BGR2RGB))
-
-        if res.segmentation_mask is None:
-            return np.zeros((h, w), np.float32)
-
-        mask = cv2.resize(res.segmentation_mask, (w, h))
-
-        # smoothing
-        if self.prev is not None:
-            mask = 0.7 * self.prev + 0.3 * mask
-
-        mask = cv2.GaussianBlur(mask, (21, 21), 0)
-        mask = np.clip(mask, 0, 1)
-
-        self.prev = mask
-        return mask
-
-
-# =========================
 # HAND TRACKER
 # =========================
+
 class HandTracker:
+
     def __init__(self):
         import mediapipe as mp
-        self.hands = mp.solutions.hands.Hands(
+
+        self.mp_hands = mp.solutions.hands
+
+        self.hands = self.mp_hands.Hands(
+            static_image_mode=False,
             max_num_hands=2,
-            min_detection_confidence=0.6,
-            min_tracking_confidence=0.5
+            model_complexity=1,
+            min_detection_confidence=0.7,
+            min_tracking_confidence=0.7
         )
 
+    # -------------------------
+    # Detect Hands
+    # -------------------------
     def process(self, frame):
-        h, w = frame.shape[:2]
-        small = cv2.resize(frame, (640, 360))
-        return self.hands.process(cv2.cvtColor(small, cv2.COLOR_BGR2RGB))
 
-    def get_info(self, results, w, h):
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        return self.hands.process(rgb)
+
+    # -------------------------
+    # Extract Information
+    # -------------------------
+    def get_info(self, results, width, height):
+
         info = {
+
             "hand_count": 0,
-            "pinch": False,
-            "points": []   # ✅ FIXED KEY (USED IN MAIN)
+
+            "left_pinch": False,
+            "right_pinch": False,
+
+            "left_points": None,
+            "right_points": None,
+
+            "left_center": None,
+            "right_center": None
         }
 
-        if not results or not results.multi_hand_landmarks:
+        if results is None:
+            return info
+
+        if results.multi_hand_landmarks is None:
             return info
 
         info["hand_count"] = len(results.multi_hand_landmarks)
 
-        for hand in results.multi_hand_landmarks:
-            lm = hand.landmark
+        # Loop through every detected hand
+        for hand_landmarks, handedness in zip(
+                results.multi_hand_landmarks,
+                results.multi_handedness):
 
-            thumb = lm[4]
-            index = lm[8]
+            label = handedness.classification[0].label
 
-            dist = ((thumb.x - index.x)**2 + (thumb.y - index.y)**2)**0.5
+            landmarks = []
 
-            if dist < 0.05:
-                info["pinch"] = True
+            for lm in hand_landmarks.landmark:
 
-            info["points"].append([(int(p.x*w), int(p.y*h)) for p in lm])
+                x = int(lm.x * width)
+                y = int(lm.y * height)
+
+                landmarks.append((x, y))
+
+            # -------------------------
+            # Pinch Detection
+            # -------------------------
+
+            thumb = hand_landmarks.landmark[4]
+            index = hand_landmarks.landmark[8]
+
+            distance = np.sqrt(
+
+                (thumb.x - index.x) ** 2 +
+
+                (thumb.y - index.y) ** 2
+
+            )
+
+            pinch = distance < 0.045
+
+            # -------------------------
+            # Palm Center
+            # -------------------------
+
+            center = landmarks[9]
+
+            # -------------------------
+            # Save Left / Right
+            # -------------------------
+
+            if label == "Left":
+
+                info["left_points"] = landmarks
+                info["left_center"] = center
+                info["left_pinch"] = pinch
+
+            else:
+
+                info["right_points"] = landmarks
+                info["right_center"] = center
+                info["right_pinch"] = pinch
 
         return info
 
 
 # =========================
-# PORTAL EFFECT (FIXED + STABLE)
+# PORTAL BOX
 # =========================
+
 class PortalBox:
+
     def __init__(self):
+
         self.active = False
         self.alpha = 0.0
+
         self.cooldown = 0
 
+        self.rect = None
+
+    # ---------------------------------------
+    # Toggle Portal
+    # ---------------------------------------
+
     def update(self, info):
+
         if self.cooldown > 0:
             self.cooldown -= 1
 
-        if info["pinch"] and self.cooldown == 0:
+        if (
+            info["left_pinch"]
+            and
+            info["right_pinch"]
+            and
+            self.cooldown == 0
+        ):
+
             self.active = not self.active
-            self.cooldown = 15
+            self.cooldown = 25
+
+    # ---------------------------------------
+    # Smooth Fade
+    # ---------------------------------------
 
     def update_alpha(self):
-        target = 1.0 if self.active else 0.0
-        self.alpha += (target - self.alpha) * 0.10
 
-    def render(self, frame, mask, bg, points=None):
+        target = 1.0 if self.active else 0.0
+
+        speed = 0.12
+
+        self.alpha += (target - self.alpha) * speed
+
+        if abs(target - self.alpha) < 0.01:
+            self.alpha = target
+
+    # ---------------------------------------
+    # Draw Portal
+    # ---------------------------------------
+
+    def render(self, frame, bg, info):
+
         if bg is None:
             return frame
 
-        h, w = frame.shape[:2]
+        if self.alpha <= 0:
+            return frame
 
-        mask3 = mask[:, :, None]
+        if info["hand_count"] < 2:
+            return frame
 
-        frame_f = frame.astype(np.float32)
-        bg_f = bg.astype(np.float32)
+        if (
+            info["left_points"] is None
+            or
+            info["right_points"] is None
+        ):
+            return frame
 
-        # =========================
-        # CLOAK BLENDING
-        # =========================
-        blended = frame_f * (1 - mask3 * self.alpha) + bg_f * (mask3 * self.alpha)
+        # ---------------------------------------
+        # Index Finger Tips
+        # ---------------------------------------
 
-        # =========================
-        # GLOW FIX (NO AXIS ERROR)
-        # =========================
-        glow = cv2.GaussianBlur(mask, (31, 31), 0)
-        glow = np.clip(glow, 0, 1)
+        left = info["left_points"][8]
+        right = info["right_points"][8]
 
-        glow3 = np.dstack([glow, glow, glow])
+        x1 = min(left[0], right[0])
+        x2 = max(left[0], right[0])
 
-        tint = np.array([0, 200, 255], dtype=np.float32)
-        blended += glow3 * tint * 0.08 * self.alpha
+        y1 = min(left[1], right[1])
+        y2 = max(left[1], right[1])
 
-        np.clip(blended, 0, 255, out=blended)
-        frame[:] = blended.astype(np.uint8)
+        margin = 30
+
+        x1 = max(0, x1 - margin)
+        y1 = max(0, y1 - margin)
+
+        x2 = min(frame.shape[1], x2 + margin)
+        y2 = min(frame.shape[0], y2 + margin)
+
+        # Save Portal
+        self.rect = (x1, y1, x2, y2)
+
+        # ---------------------------------------
+        # Replace with Background
+        # ---------------------------------------
+
+        frame[y1:y2, x1:x2] = bg[y1:y2, x1:x2].astype(np.uint8)
+
+        # ---------------------------------------
+        # Portal Border
+        # ---------------------------------------
+
+        color = (255, 255, 0)
+
+        thickness = 3
+
+        cv2.rectangle(
+
+            frame,
+
+            (x1, y1),
+
+            (x2, y2),
+
+            color,
+
+            thickness
+
+        )
+
+        # ---------------------------------------
+        # Corner Circles
+        # ---------------------------------------
+
+        cv2.circle(frame, (x1, y1), 6, (255,255,255), -1)
+        cv2.circle(frame, (x2, y1), 6, (255,255,255), -1)
+        cv2.circle(frame, (x1, y2), 6, (255,255,255), -1)
+        cv2.circle(frame, (x2, y2), 6, (255,255,255), -1)
 
         return frame
 
@@ -155,9 +281,86 @@ class PortalBox:
 # =========================
 # HUD
 # =========================
+
 class HUD:
+
     def draw(self, frame, portal, info):
-        txt = "PINCH TO TOGGLE INVISIBILITY"
-        cv2.putText(frame, txt, (20, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,255), 2)
+
+        # -------------------------
+        # Portal Status
+        # -------------------------
+
+        state = "ACTIVE" if portal.active else "OFF"
+
+        color = (0, 255, 0) if portal.active else (0, 0, 255)
+
+        cv2.putText(
+            frame,
+            f"Portal : {state}",
+            (20, 35),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            color,
+            2
+        )
+
+        # -------------------------
+        # Hands Detected
+        # -------------------------
+
+        cv2.putText(
+            frame,
+            f"Hands : {info['hand_count']}",
+            (20, 65),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.65,
+            (255, 255, 255),
+            2
+        )
+
+        # -------------------------
+        # Pinch Status
+        # -------------------------
+
+        if info["left_pinch"] and info["right_pinch"]:
+            pinch = "YES"
+            pinch_color = (0, 255, 0)
+        else:
+            pinch = "NO"
+            pinch_color = (0, 0, 255)
+
+        cv2.putText(
+            frame,
+            f"Double Pinch : {pinch}",
+            (20, 95),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.65,
+            pinch_color,
+            2
+        )
+
+        # -------------------------
+        # Instructions
+        # -------------------------
+
+        cv2.putText(
+            frame,
+            "Use Both Hands",
+            (20, frame.shape[0] - 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 255, 255),
+            2
+        )
+
+        cv2.putText(
+            frame,
+            "Pinch Both Hands To Toggle Portal",
+            (20, frame.shape[0] - 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 255, 255),
+            2
+        )
+
         return frame
