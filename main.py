@@ -54,7 +54,7 @@ def main():
             "Capturing Background...",
             (20,40),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.8,
+            0.7,
             (0,255,255),
             2
         )
@@ -102,6 +102,10 @@ def main():
         cv2.imshow(WINDOW, frame)
 
         key = cv2.waitKey(1) & 0xFF
+
+        if key == ord("b"):
+           bg.capture(frame)
+           print("Background Captured!")
 
         if key == 27 or key == ord("q"):
             break

@@ -34,29 +34,20 @@ class BackgroundModel:
 # =========================
 
 class HandTracker:
+
     def __init__(self):
         import mediapipe as mp
 
-        print("MediaPipe version:", mp.__version__)
-
+        
         self.mp_hands = mp.solutions.hands
 
-        try:
-            self.hands = self.mp_hands.Hands(
-                static_image_mode=False,
-                max_num_hands=2,
-                model_complexity=1,
-                min_detection_confidence=0.7,
-                min_tracking_confidence=0.7,
-            )
-            print("MediaPipe Hands initialized successfully.")
-        except Exception as e:
-            print("MediaPipe initialization failed:", e)
-            raise
-
-    def process(self, frame):
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return self.hands.process(rgb)
+        self.hands = self.mp_hands.Hands(
+            static_image_mode=False,
+            max_num_hands=2,
+            model_complexity=1,
+            min_detection_confidence=0.7,
+            min_tracking_confidence=0.7
+        )
 
     # -------------------------
     # Detect Hands
@@ -100,6 +91,7 @@ class HandTracker:
                 results.multi_handedness):
 
             label = handedness.classification[0].label
+            
 
             landmarks = []
 
@@ -124,8 +116,8 @@ class HandTracker:
                 (thumb.y - index.y) ** 2
 
             )
-
-            pinch = distance < 0.045
+            
+            pinch = distance < 0.07
 
             # -------------------------
             # Palm Center
@@ -137,14 +129,11 @@ class HandTracker:
             # Save Left / Right
             # -------------------------
 
-            if label == "Left":
-
+            if  info["left_points"] is None:
                 info["left_points"] = landmarks
                 info["left_center"] = center
                 info["left_pinch"] = pinch
-
             else:
-
                 info["right_points"] = landmarks
                 info["right_center"] = center
                 info["right_pinch"] = pinch
