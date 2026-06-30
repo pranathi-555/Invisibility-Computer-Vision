@@ -1,6 +1,6 @@
 gradio==5.34.2
-mediapipe==0.10.14
-opencv-python-headless==4.8.1.78
+mediapipe==0.10.30
+opencv-python-headless==4.10.0.84
 numpy==1.26.4
 protobuf==4.25.3
 Pillow==10.4.0
