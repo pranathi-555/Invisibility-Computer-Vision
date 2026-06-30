@@ -34,20 +34,29 @@ class BackgroundModel:
 # =========================
 
 class HandTracker:
-
     def __init__(self):
         import mediapipe as mp
 
-        from mediapipe.python.solutions import hands as mp_hands
-        self.mp_hands = mp_hands
+        print("MediaPipe version:", mp.__version__)
 
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=2,
-            model_complexity=1,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7
-        )
+        self.mp_hands = mp.solutions.hands
+
+        try:
+            self.hands = self.mp_hands.Hands(
+                static_image_mode=False,
+                max_num_hands=2,
+                model_complexity=1,
+                min_detection_confidence=0.7,
+                min_tracking_confidence=0.7,
+            )
+            print("MediaPipe Hands initialized successfully.")
+        except Exception as e:
+            print("MediaPipe initialization failed:", e)
+            raise
+
+    def process(self, frame):
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return self.hands.process(rgb)
 
     # -------------------------
     # Detect Hands
