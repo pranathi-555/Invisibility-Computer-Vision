@@ -49,9 +49,7 @@ Gesture-Controlled-Dynamic-Invisibility-Portal/
 ├── README.md
 ├── assets/
 ├── images/
-├── static/ (if applicable)
-├── templates/ (if applicable)
-└── other project files
+
 ```
 
 ---
@@ -155,8 +153,7 @@ https://invisibility-computer-vision.onrender.com/
 
 ## 📂 GitHub Repository
 
-https://github.com/pranathi-555/Invisibility-Computer-Vision.
-git
+https://github.com/pranathi-555/Invisibility-Computer-Vision.git
 
 ---
 
