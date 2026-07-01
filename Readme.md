@@ -1,182 +1,184 @@
-# Gesture-Controlled Dynamic Invisibility Portal Using Computer Vision and Hand Tracking
+# Gesture-Controlled Dynamic Invisibility Portal Using Computer Vision
 
-An AI-powered Computer Vision project that creates a real-time dynamic invisibility portal using hand gesture recognition. The system detects hand gestures using MediaPipe Hands and OpenCV, allowing users to activate or deactivate an invisibility portal through intuitive pinch gestures.
+## 📌 Overview
 
----
+The **Gesture-Controlled Dynamic Invisibility Portal** is an Artificial Intelligence and Computer Vision project that creates a real-time invisibility effect using hand gestures. Unlike traditional invisibility cloak systems that require colored fabrics, this project uses **MediaPipe** for hand gesture recognition and **OpenCV** for image processing, enabling a completely touchless and interactive experience.
 
-## Project Overview
-
-This project demonstrates the application of Computer Vision, Artificial Intelligence, and Human-Computer Interaction by enabling users to create a dynamic invisibility portal using only hand gestures.
-
-Unlike traditional invisibility cloak projects that require colored cloth, this system uses real-time hand tracking to control an invisible portal. The portal replaces a selected region of the live camera feed with a previously captured background, creating the illusion of invisibility.
+The system captures a clean background image and continuously processes webcam frames. When a predefined gesture is detected, the selected foreground region is replaced with the stored background, creating the illusion of invisibility.
 
 ---
 
-## Features
+## 🚀 Features
 
-- Real-time hand tracking using MediaPipe
-- Double-hand pinch gesture detection
-- Dynamic invisibility portal creation
-- Background calibration
-- Real-time portal activation and deactivation
-- Smooth portal transition
-- Live HUD (Heads-Up Display)
-- Beginner-friendly implementation
-- Modular and object-oriented Python code
-
----
-
-## Technologies Used
-
-- Python 3.12+
-- OpenCV
-- MediaPipe
-- NumPy
+- 🎥 Real-time webcam processing
+- ✋ AI-based hand gesture recognition
+- 👋 Touchless activation and deactivation
+- 🧠 MediaPipe hand landmark detection
+- 🖼️ Dynamic background replacement
+- ⚡ Real-time image processing using OpenCV
+- 🌐 Browser-based interface using Gradio
+- ☁️ Cloud deployment support
+- 📱 User-friendly interface
+- 🔧 Modular and scalable architecture
 
 ---
 
-## Project Structure
+## 🛠️ Technologies Used
 
-```
-Invisibility-Computer-Vision/
-│
-├── main.py
+| Technology | Purpose |
+|------------|---------|
+| Python | Programming Language |
+| OpenCV | Image Processing |
+| MediaPipe | Hand Detection & Gesture Recognition |
+| NumPy | Numerical Operations |
+| Gradio | Web Interface |
+| Git | Version Control |
+| GitHub | Source Code Management |
+| Render / Hugging Face | Cloud Deployment |
+
+---
+
+## 📂 Project Structure
+
+```text
+Gesture-Controlled-Dynamic-Invisibility-Portal/
+
+├── app.py
 ├── engine.py
 ├── requirements.txt
 ├── README.md
-├── LICENSE
-├── screenshots/
-│   ├── home.png
-│   ├── portal.png
-│   └── gesture.png
-│
-└── demo/
-    └── demo.mp4
+├── assets/
+├── images/
+├── static/ (if applicable)
+├── templates/ (if applicable)
+└── other project files
 ```
 
 ---
 
-## Installation
+## ⚙️ Installation
 
-### Clone Repository
-
-```bash
-git clone https://github.com/pranathi-555/Invisibility-Computer-Vision.git
-```
-
-### Navigate
+### Clone the Repository
 
 ```bash
-cd Invisibility-Computer-Vision
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
 ```
 
-### Install Requirements
+### Navigate to the Project Folder
+
+```bash
+cd Gesture-Controlled-Dynamic-Invisibility-Portal
+```
+
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run
+### Run the Application
 
 ```bash
-python main.py
+python app.py
 ```
 
 ---
 
-## How It Works
+## 💻 Hardware Requirements
 
-### Step 1
-
-The application captures the background for a few seconds while the user stands outside the camera view.
-
-### Step 2
-
-MediaPipe detects both hands and tracks 21 landmarks for each hand.
-
-### Step 3
-
-When both hands perform a pinch gesture, the system activates the invisibility portal.
-
-### Step 4
-
-The portal region is replaced with the captured background, creating the illusion of invisibility.
-
-### Step 5
-
-Perform the gesture again to deactivate the portal.
+- Intel Core i3 Processor or higher
+- Minimum 4 GB RAM
+- HD Webcam
+- Stable Internet Connection
 
 ---
 
-## Workflow
+## 🖥️ Software Requirements
+
+- Windows 10/11 or Linux
+- Python 3.10+
+- Visual Studio Code
+- Git
+
+---
+
+## 🔄 Workflow
+
+1. Initialize the webcam.
+2. Capture a clean background image.
+3. Detect hand landmarks using MediaPipe.
+4. Recognize predefined hand gestures.
+5. Apply background replacement using OpenCV.
+6. Display the invisibility effect in real time.
+
+---
 
 
-Webcam
-   │
-   ▼
-Capture Background
-   │
-   ▼
-Hand Detection
-(MediaPipe)
-   │
-   ▼
-Gesture Recognition
-(Double Pinch)
-   │
-   ▼
-Portal Generation
-   │
-   ▼
-Background Replacement
-   │
-   ▼
-Display Output
+## 🧪 Testing
 
+| Test Case | Status |
+|------------|--------|
+| Webcam Initialization | ✅ Pass |
+| Background Capture | ✅ Pass |
+| Hand Detection | ✅ Pass |
+| Gesture Recognition | ✅ Pass |
+| Invisibility Effect | ✅ Pass |
+| Deployment | ✅ Pass |
 
+---
 
-## Future Improvements
+## 📊 Results
 
-- AI gesture recognition using deep learning
-- Gesture customization
-- Voice-controlled portal
-- Multi-portal support
-- AR integration
-- Object tracking
+The application successfully performs real-time gesture recognition and generates the invisibility effect using Computer Vision techniques. The system provides smooth performance, accurate hand detection, and an intuitive user experience.
+
+---
+
+## 🌱 Future Enhancements
+
+- Multiple gesture support
+- Full-body invisibility
+- Voice-controlled commands
+- Mobile application
+- Augmented Reality integration
 - GPU acceleration
-- Web application deployment
-- Mobile application version
+- Multi-user support
 
 ---
 
-## Applications
+## 🔗 Live Demo
 
-- Human-Computer Interaction
-- Augmented Reality
-- Virtual Reality
-- AI-based Smart Interfaces
-- Entertainment
-- Education
-- Interactive Exhibitions
-- Computer Vision Research
+**Deployment Link**
+
+https://invisibility-computer-vision.onrender.com/
 
 ---
 
-## Author
+## 📂 GitHub Repository
+
+https://github.com/pranathi-555/Invisibility-Computer-Vision.
+git
+
+---
+
+## 👩‍💻 Author
 
 **Pranathi Kurapati**
 
-Electronics and Communication Engineering
-
-GitHub:
-https://github.com/pranathi-555
-
-
+Artificial Intelligence Intern  
+SITER Academy Summer Internship – 2026
 
 ---
 
-## License
+## 📚 References
 
-This project is developed for educational and research purposes.
+- Python Documentation – https://docs.python.org/
+- OpenCV Documentation – https://docs.opencv.org/
+- MediaPipe Documentation – https://developers.google.com/mediapipe
+- NumPy Documentation – https://numpy.org/doc/
+- Gradio Documentation – https://www.gradio.app/docs
 
-MIT License
+---
+
+## ⭐ Acknowledgement
+
+This project was developed as part of the **SITER Academy Summer Internship 2026** to demonstrate the practical application of Artificial Intelligence, Computer Vision, and Human-Computer Interaction through a gesture-controlled real-time invisibility system.
