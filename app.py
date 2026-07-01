@@ -1,10 +1,33 @@
-import mediapipe as mp
+import gradio as gr
 
-print("=" * 60)
-print("FILE:", mp.__file__)
-print("VERSION:", getattr(mp, "__version__", None))
-print("HAS SOLUTIONS:", hasattr(mp, "solutions"))
-print("DIR:", dir(mp))
-print("=" * 60)
+from engine import process_frame
 
-raise SystemExit
+demo = gr.Interface(
+    fn=process_frame,
+
+    inputs=gr.Image(
+        sources=["webcam"],
+        type="numpy",
+        label="Webcam"
+    ),
+
+    outputs=gr.Image(
+        type="numpy",
+        label="Processed Output"
+    ),
+
+    live=True,
+
+    title="Gesture-Controlled Dynamic Invisibility Portal",
+
+    description="""
+    Allow webcam access and use both hands to perform the pinch gesture.
+    The portal will activate in real time.
+    """
+)
+import os
+
+demo.launch(
+    server_name="0.0.0.0",
+    server_port=int(os.environ.get("PORT", 7860))
+)
