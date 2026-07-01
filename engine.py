@@ -39,10 +39,10 @@ class HandTracker:
         import mediapipe as mp
 
         print("=" * 50)
-        print("MediaPipe file:", mp.__file__)
-        print("MediaPipe version:", getattr(mp, "__version__", "unknown"))
-        print("Has solutions:", hasattr(mp, "solutions"))
-        print("Members:", dir(mp))
+        print("MEDIAPIPE FILE:", mp.__file__)
+        print("MEDIAPIPE VERSION:", getattr(mp, "__version__", "NO VERSION"))
+        print("HAS SOLUTIONS:", hasattr(mp, "solutions"))
+        print("DIR:", dir(mp))
         print("=" * 50)
 
         self.mp_hands = mp.solutions.hands
